@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GMod Aero Auto-Vault</title>
+  <style>
+    /* =========================================================
+       2000s FRUTIGER AERO & GARRYS MOD DERMA THEME
+       ========================================================= */
+    :root {
+      --gmod-blue: #128cf4;
+      --gmod-dark-blue: #0959a4;
+      --aero-cyan: #46c8f5;
+      --aero-glass-bg: rgba(235, 245, 255, 0.45);
+      --aero-panel-bg: rgba(255, 255, 255, 0.65);
+      --aero-border: rgba(255, 255, 255, 0.85);
+      --text-main: #1c3553;
+      --text-muted: #537599;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: "Segoe UI", "Frutiger", Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      color: var(--text-main);
+      background: linear-gradient(135deg, #74b9ff 0%, #a1c4fd 30%, #c2e9fb 70%, #d4fc79 140%);
+      background-attachment: fixed;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      pointer-events: none;
+    }
+    body::before {
+      width: 450px;
+      height: 450px;
+      background: rgba(0, 162, 255, 0.35);
+      top: -50px;
+      left: 10%;
+    }
+    body::after {
+      width: 400px;
+      height: 400px;
+      background: rgba(85, 230, 255, 0.4);
+      bottom: -50px;
+      right: 15%;
+    }
+
+    /* MAIN AERO WINDOW */
+    .aero-window {
+      width: 1200px;
+      max-width: 95vw;
+      height: 850px;
+      max-height: 92vh;
+      background: var(--aero-glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--aero-border);
+      border-radius: 12px;
+      box-shadow: 
+        0 20px 50px rgba(0, 40, 90, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* TITLEBAR */
+    .titlebar {
+      height: 40px;
+      background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(220, 240, 255, 0.4) 50%, 
+        rgba(170, 215, 255, 0.5) 51%, 
+        rgba(200, 235, 255, 0.7) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #0b3b6f;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+
+    .gmod-logo {
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(180deg, #1ea3ff, #0066cc);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .win-btn {
+      width: 28px;
+      height: 18px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(200,225,255,0.3) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #335;
+      cursor: pointer;
+    }
+
+    .win-btn.close:hover {
+      background: linear-gradient(180deg, #ff8a8a 0%, #e81123 100%);
+      color: white;
+    }
+
+    /* TOP TOOLBAR */
+    .top-toolbar {
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-box-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 380px;
+    }
+
+    .aero-input, .aero-select {
+      width: 100%;
+      padding: 7px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(150, 195, 240, 0.8);
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      box-shadow: inset 0 1px 3px rgba(0, 60, 130, 0.15);
+      transition: all 0.2s ease;
+    }
+
+    .aero-input:focus, .aero-select:focus {
+      border-color: var(--gmod-blue);
+      box-shadow: 0 0 8px rgba(18, 140, 244, 0.5);
+      background: #fff;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .counter-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gmod-dark-blue);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    /* WORKSPACE */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 250px;
+      background: rgba(240, 247, 255, 0.5);
+      border-right: 1px solid rgba(255, 255, 255, 0.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--gmod-dark-blue);
+      padding: 6px 8px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid rgba(18, 140, 244, 0.2);
+    }
+
+    .folder-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a4373;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .folder-item:hover {
+      background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(205,235,255,0.6) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .folder-item.active {
+      background: linear-gradient(180deg, #3aa8ff 0%, #0c7de4 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 8px rgba(12, 125, 228, 0.4);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .folder-pill {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.08);
+    }
+    .folder-item.active .folder-pill {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* GALLERY GRID */
+    .gallery-view {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.3);
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-auto-rows: max-content;
+      gap: 16px;
+    }
+
+    .image-card {
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 10px rgba(0, 40, 80, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .image-card::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 45%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.0) 100%);
+      pointer-events: none;
+    }
+
+    .image-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: #38b6ff;
+      box-shadow: 0 10px 22px rgba(18, 140, 244, 0.25);
+    }
+
+    .card-thumb-wrap {
+      width: 100%;
+      height: 140px;
+      background: #e0f0ff;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .image-card:hover .card-thumb {
+      transform: scale(1.08);
+    }
+
+    .card-details {
+      padding: 9px 10px;
+      background: rgba(255, 255, 255, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #103a63;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* AERO BUTTON */
+    .aero-btn {
+      padding: 6px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: linear-gradient(180deg, 
+        rgba(255,255,255,0.9) 0%, 
+        rgba(255,255,255,0.3) 49%, 
+        rgba(195,225,255,0.5) 50%, 
+        rgba(145,200,255,0.7) 100%);
+      color: #0b3f73;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,50,120,0.15);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .aero-btn:hover {
+      box-shadow: 0 0 10px rgba(70, 200, 245, 0.6);
+      transform: translateY(-1px);
+    }
+
+    /* LIGHTBOX MODAL */
+    .lightbox-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(10, 30, 60, 0.65);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .lightbox-modal.active { display: flex; }
+
+    .lightbox-window {
+      width: 850px;
+      max-width: 90vw;
+      max-height: 90vh;
+      background: rgba(245, 250, 255, 0.9);
+      backdrop-filter: blur(25px);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .lightbox-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 55vh;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0, 30, 70, 0.2);
+    }
+
+    .lightbox-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.8);
+      padding: 10px 14px;
+      border-radius: 8px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: linear-gradient(180deg, #1ea3ff, #0066cc);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 2000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .status-msg {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .status-msg h3 { font-size: 18px; color: var(--gmod-dark-blue); margin-bottom: 6px; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(200, 225, 255, 0.3); }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #78c6ff, #2596f3);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="aero-window">
+    <div class="titlebar">
+      <div class="title-left">
+        <div class="gmod-logo">g</div>
+        <span id="windowTitle">Garry's Mod Auto-Vault</span>
+      </div>
+      <div class="window-controls">
+        <div class="win-btn">—</div>
+        <div class="win-btn">❐</div>
+        <div class="win-btn close" onclick="alert('Spawn menu closed!')">✕</div>
+      </div>
+    </div>
+
+    <div class="top-toolbar">
+      <div class="search-box-wrap">
+        <input type="text" id="searchInput" class="aero-input" placeholder="🔍 Search scanned files...">
+      </div>
+
+      <div class="toolbar-actions">
+        <button class="aero-btn" id="refreshBtn" onclick="fetchImagesFromGitHub(true)">🔄 Re-scan</button>
+        <select id="sortSelect" class="aero-select" style="width: 140px;">
+          <option value="name-asc">Sort: Name (A-Z)</option>
+          <option value="name-desc">Sort: Name (Z-A)</option>
+        </select>
+        <span class="counter-badge" id="countBadge">Scanning...</span>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <div class="sidebar" id="folderList">
+        <div class="sidebar-header">Directories</div>
+      </div>
+
+      <div class="gallery-view" id="galleryGrid">
+        <div class="status-msg">
+          <h3>Connecting to GitHub Tree...</h3>
+          <p>Scanning repository folders for image files.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div class="lightbox-modal" id="lightboxModal">
+    <div class="lightbox-window">
+      <div class="titlebar">
+        <div class="title-left" id="modalTitle">Image Preview</div>
+        <div class="window-controls">
+          <div class="win-btn close" id="modalCloseBtn">✕</div>
+        </div>
+      </div>
+      <div class="lightbox-content">
+        <img src="" alt="" class="lightbox-img" id="modalImg">
+        <div class="lightbox-bar">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #0b3f73;" id="modalFileName">file.png</div>
+            <div style="font-size: 11px; color: var(--text-muted);" id="modalFolderInfo">Folder: Renders</div>
+          </div>
+          <button class="aero-btn" id="copyUrlBtn">📋 Copy Direct URL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Link copied to clipboard!</div>
+
+  <script>
+    /* =========================================================
+       CONFIGURATION: SET YOUR GITHUB DETAILS HERE
+       ========================================================= */
+    const GITHUB_CONFIG = {
+      user: "YOUR_GITHUB_USERNAME", // e.g. "john-doe"
+      repo: "YOUR_REPO_NAME",       // e.g. "image-vault"
+      branch: "main",               // "main" or "master"
+      imagesFolder: "images"        // Folder to scan, or "" for entire repo
+    };
+
+    // Global State
+    let galleryData = [];
+    let currentFolder = "All";
+    let searchQuery = "";
+    let currentSort = "name-asc";
+    let activeModalImage = null;
+
+    // DOM Elements
+    const folderList = document.getElementById("folderList");
+    const galleryGrid = document.getElementById("galleryGrid");
+    const searchInput = document.getElementById("searchInput");
+    const sortSelect = document.getElementById("sortSelect");
+    const countBadge = document.getElementById("countBadge");
+    const lightboxModal = document.getElementById("lightboxModal");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalFileName = document.getElementById("modalFileName");
+    const modalFolderInfo = document.getElementById("modalFolderInfo");
+    const copyUrlBtn = document.getElementById("copyUrlBtn");
+    const toast = document.getElementById("toast");
+
+    // Supported Image Extensions
+    const IMAGE_EXTS = /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i;
+
+    /* =========================================================
+       AUTOMATIC GITHUB FETCH VIA GIT TREES API
+       ========================================================= */
+    async function fetchImagesFromGitHub(forceBypassCache = false) {
+      countBadge.innerText = "Scanning...";
+      galleryGrid.innerHTML = `
+        <div class="status-msg">
+          <h3>Scanning Repository...</h3>
+          <p>Reading folder hierarchy from GitHub API...</p>
+        </div>
+      `;
+
+      // Check cache to stay within GitHub API limits (60 requests/hr)
+      const cacheKey = `gmod_vault_${GITHUB_CONFIG.user}_${GITHUB_CONFIG.repo}`;
+      if (!forceBypassCache) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.timestamp < 1000 * 60 * 5) { // 5-minute cache
+              galleryData = parsed.data;
+              renderFolders();
+              renderGallery();
+              return;
+            }
+          } catch(e){}
+        }
+      }
+
+      const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.user}/${GITHUB_CONFIG.repo}/git/trees/${GITHUB_CONFIG.branch}?recursive=1`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`GitHub API Error: ${response.status} (${response.statusText})`);
+        }
+        const data = await response.json();
+
+        // Filter files for images within the configured imagesFolder
+        const imageFiles = data.tree.filter(item => {
+          if (item.type !== "blob") return false;
+          if (!IMAGE_EXTS.test(item.path)) return false;
+          if (GITHUB_CONFIG.imagesFolder && !item.path.startsWith(GITHUB_CONFIG.imagesFolder + "/")) {
+            return false;
+          }
+          return true;
+        });
+
+        // Parse path into folder and clean titles
+        galleryData = imageFiles.map(file => {
+          let relativePath = file.path;
+          if (GITHUB_CONFIG.imagesFolder) {
+            relativePath = relativePath.substring(GITHUB_CONFIG.imagesFolder.length + 1);
+          }
+
+          const parts = relativePath.split("/");
+          let folder = "General";
+          let filename = parts[parts.length - 1];
+
+          if (parts.length > 1) {
+            folder = parts.slice(0, -1).join(" / ");
+          }
+
+          // Clean title: remove file extension and replace dashes/underscores with spaces
+          const title = filename.replace(IMAGE_EXTS, "").replace(/[-_]/g, " ");
+
+          return {
+            title: title.charAt(0).toUpperCase() + title.slice(1),
+            folder: folder,
+            fileName: filename,
+            path: file.path,
+            url: `./${file.path}` // Relative link works automatically on GitHub Pages
+          };
+        });
+
+        // Store to local cache
+        localStorage.setItem(cacheKey, JSON.stringify({
+          timestamp: Date.now(),
+          data: galleryData
+        }));
+
+        renderFolders();
+        renderGallery();
+
+      } catch (err) {
+        galleryGrid.innerHTML = `
+          <div class="status-msg">
+            <h3 style="color:#e81123;">Scan Failed</h3>
+            <p>${err.message}</p>
+            <p style="font-size:12px; margin-top:8px;">Make sure your username and repo name are set correctly in index.html!</p>
+          </div>
+        `;
+        countBadge.innerText = "Error";
+      }
+    }
+
+    // Render Side Folder Tree
+    function renderFolders() {
+      const folders = ["All", ...new Set(galleryData.map(item => item.folder))];
+      folderList.innerHTML = `<div class="sidebar-header">Directories</div>`;
+
+      folders.forEach(folder => {
+        const count = folder === "All" 
+          ? galleryData.length 
+          : galleryData.filter(i => i.folder === folder).length;
+
+        const folderEl = document.createElement("div");
+        folderEl.className = `folder-item ${folder === currentFolder ? 'active' : ''}`;
+        folderEl.innerHTML = `
+          <span>📁 ${folder}</span>
+          <span class="folder-pill">${count}</span>
+        `;
+        folderEl.onclick = () => {
+          currentFolder = folder;
+          renderFolders();
+          renderGallery();
+        };
+        folderList.appendChild(folderEl);
+      });
+    }
+
+    // Filter & Sort Logic
+    function getFilteredImages() {
+      return galleryData
+        .filter(item => {
+          const inFolder = (currentFolder === "All" || item.folder === currentFolder);
+          const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                item.fileName.toLowerCase().includes(searchQuery.toLowerCase());
+          return inFolder && matchesSearch;
+        })
+        .sort((a, b) => {
+          if (currentSort === "name-asc") return a.title.localeCompare(b.title);
+          if (currentSort === "name-desc") return b.title.localeCompare(a.title);
+        });
+    }
+
+    // Render Grid
+    function renderGallery() {
+      galleryGrid.innerHTML = "";
+      const filtered = getFilteredImages();
+      countBadge.innerText = `${filtered.length} Items`;
+
+      if (filtered.length === 0) {
+        galleryGrid.innerHTML = `
+          <div class="status-msg">
+            <h3>No Media Found</h3>
+            <p>Try placing image files in your repository folders.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(img => {
+        const card = document.createElement("div");
+        card.className = "image-card";
+        card.innerHTML = `
+          <div class="card-thumb-wrap">
+            <img src="${img.url}" class="card-thumb" alt="${img.title}" loading="lazy">
+          </div>
+          <div class="card-details">
+            <div class="card-title">${img.title}</div>
+            <div class="card-meta">
+              <span>${img.folder}</span>
+            </div>
+          </div>
+        `;
+        card.onclick = () => openLightbox(img);
+        galleryGrid.appendChild(card);
+      });
+    }
+
+    // Lightbox Modal
+    function openLightbox(img) {
+      activeModalImage = img;
+      modalImg.src = img.url;
+      modalTitle.innerText = `GMod Viewer - ${img.title}`;
+      modalFileName.innerText = img.fileName;
+      modalFolderInfo.innerText = `Directory: ${img.folder}`;
+      lightboxModal.classList.add("active");
+    }
+
+    function closeLightbox() {
+      lightboxModal.classList.remove("active");
+      activeModalImage = null;
+    }
+
+    // Copy URL
+    copyUrlBtn.onclick = () => {
+      if (!activeModalImage) return;
+      const fullUrl = new URL(activeModalImage.url, window.location.href).href;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+      });
+    };
+
+    // Listeners
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      renderGallery();
+    });
+
+    sortSelect.addEventListener("change", (e) => {
+      currentSort = e.target.value;
+      renderGallery();
+    });
+
+    modalCloseBtn.onclick = closeLightbox;
+    lightboxModal.onclick = (e) => {
+      if (e.target === lightboxModal) closeLightbox();
+    };
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeLightbox();
+    });
+
+    // Run Auto Fetch
+    fetchImagesFromGitHub();
+  </script>
+</body>
+</html>
